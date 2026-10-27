@@ -25,6 +25,7 @@
   --accent:#5EC2BB; --accent-fg:#0B1514; --accent-soft:#1D3633;
   --ok:#6FD08C; --ok-soft:#173222; --warn:#F2B65A; --warn-soft:#3A2B12; color-scheme:dark}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.7;direction:rtl}
 .wrap{max-width:860px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
 h1,h2{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.35}
@@ -109,6 +110,7 @@ pre.post{white-space:pre-wrap;font-family:var(--body);background:var(--surface);
       <label for="fFree">اكتب الإعلان بنفسك</label>
       <textarea id="fFree" style="min-height:200px"></textarea>
       <p class="hint">عشان النص يتغير من جروب للتاني، حط الكلمات البديلة بين أقواس وافصلها بـ |. مثال: {مطلوب|محتاجين|نبحث عن} محاسب. كل جروب هياخد اختيار مختلف.</p>
+      <p class="hint">ومن غير أقواس كمان: الأداة بتغيّر أول البوست وآخره من جروب للتاني لوحدها.</p>
     </div>
   </section>
 
@@ -190,7 +192,12 @@ const lines=t=>t.split('\n').map(s=>s.trim()).filter(Boolean);
 function build(i,key){
   const r=rng(hash(key+'|'+i+'|'+today()));
   if(mode==='free'){
-    return $('fFree').value.replace(/\{([^{}]*\|[^{}]*)\}/g,(m,g)=>pick(r,g.split('|')));
+    let txt=$('fFree').value.replace(/\{([^{}]*\|[^{}]*)\}/g,(m,g)=>pick(r,g.split('|'))).trim();
+    if(!txt) return '';
+    const em=pick(r,['🔴 ','📢 ','✨ ','💼 ','📌 ','']);
+    const nl=txt.indexOf('\n'); txt=em+txt;
+    const close=pick(r,['شير للي محتاجها، ممكن تكون سبب في رزق حد 🙏','اعمل منشن لحد مناسب 👇','بالتوفيق للجميع 🤍','للمهتمين يتواصل على البيانات اللي فوق 👆','']);
+    return close?txt+'\n\n'+close:txt;
   }
   const t=$('fTitle').value.trim()||'الوظيفة', co=$('fCompany').value.trim(), loc=$('fLocation').value.trim(),
         sal=$('fSalary').value.trim(), ap=$('fApply').value.trim(), tags=$('fTags').value.trim();
