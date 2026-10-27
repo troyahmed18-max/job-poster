@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ناشر إعلانات الوظائف</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+/* Layout: one working column — ad composer, group list, then the posting queue as a numbered checklist */
+:root{
+  --bg:#F2F4F3; --surface:#FFFFFF; --sunk:#E7EBEA; --fg:#1B2524; --muted:#5C6B69; --line:#D3DAD8;
+  --accent:#0F5F5C; --accent-fg:#FFFFFF; --accent-soft:#D7EBE8;
+  --ok:#1E7A3C; --ok-soft:#DDF1E2; --warn:#9A5B00; --warn-soft:#FBEBCF;
+  --display:"Alexandria","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111817; --surface:#18211F; --sunk:#0D1312; --fg:#E4ECEA; --muted:#97A7A4; --line:#2C3836;
+  --accent:#5EC2BB; --accent-fg:#0B1514; --accent-soft:#1D3633;
+  --ok:#6FD08C; --ok-soft:#173222; --warn:#F2B65A; --warn-soft:#3A2B12; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111817; --surface:#18211F; --sunk:#0D1312; --fg:#E4ECEA; --muted:#97A7A4; --line:#2C3836;
+  --accent:#5EC2BB; --accent-fg:#0B1514; --accent-soft:#1D3633;
+  --ok:#6FD08C; --ok-soft:#173222; --warn:#F2B65A; --warn-soft:#3A2B12; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.7;direction:rtl}
+.wrap{max-width:860px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.35}
+h1{font-size:1.75rem}
+h2{font-size:1.15rem;display:flex;align-items:center;gap:10px}
+h2 .step{font-family:var(--display);font-size:.8rem;background:var(--accent);color:var(--accent-fg);width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;flex:none}
+.lede{color:var(--muted);margin:6px 0 0;max-width:62ch}
+section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.hint{color:var(--muted);font-size:.85rem;margin:0}
+label{font-weight:600;font-size:.9rem;display:block;margin-bottom:4px}
+input[type=text],input[type=number],textarea{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:9px 11px}
+textarea{resize:vertical;min-height:90px}
+input:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid>*{min-width:0}
+.full{grid-column:1/-1}
+@media (max-width:620px){.grid{grid-template-columns:1fr}}
+.tabs{display:flex;gap:6px;background:var(--sunk);padding:4px;border-radius:10px;width:fit-content;max-width:100%;flex-wrap:wrap}
+.tabs button{font:inherit;font-weight:600;border:0;background:transparent;color:var(--muted);padding:6px 14px;border-radius:7px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:8px 14px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn.small{padding:5px 10px;font-size:.85rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:130px;flex:1}
+.stat b{font-family:var(--display);font-size:1.4rem;display:block;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:.82rem}
+.banner{border-radius:10px;padding:12px 16px;font-weight:600}
+.banner.wait{background:var(--warn-soft);color:var(--warn)}
+.banner.go{background:var(--ok-soft);color:var(--ok)}
+.queue{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.item{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+.item.done{background:var(--ok-soft);border-color:transparent}
+.item-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.num{font-family:var(--display);color:var(--muted);font-size:.85rem;min-width:2.2em;font-variant-numeric:tabular-nums}
+.gname{font-weight:600;flex:1;min-width:0;overflow-wrap:anywhere}
+.chip{font-size:.75rem;padding:2px 9px;border-radius:99px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.chip.ok{background:var(--ok);color:var(--surface)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+details summary{cursor:pointer;color:var(--accent);font-size:.85rem;font-weight:600}
+pre.post{white-space:pre-wrap;font-family:var(--body);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;margin:8px 0 0;font-size:.9rem;overflow-wrap:anywhere}
+.batch-sep{font-size:.8rem;color:var(--muted);font-weight:600;padding:4px 2px;border-top:1px dashed var(--line);margin-top:4px}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.tips{margin:0;padding-inline-start:20px;color:var(--muted);font-size:.88rem}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>ناشر إعلانات الوظائف</h1>
+    <p class="lede">اكتب الإعلان مرة واحدة، والأداة تعمل نسخة مختلفة شوية لكل جروب. تدوس "انسخ وافتح"، تلزق في الجروب وتنشر. النشر على دفعات عشان حسابك يفضل في أمان.</p>
+  </header>
+
+  <div class="stats" aria-live="polite">
+    <div class="stat"><b id="stDone">0</b><span>اتنشر النهارده</span></div>
+    <div class="stat"><b id="stLeft">0</b><span>جروبات فاضلة</span></div>
+    <div class="stat"><b id="stBatch">1</b><span>الدفعة الحالية</span></div>
+  </div>
+  <div id="banner" class="banner go">جاهز. ابدأ أول دفعة.</div>
+
+  <section aria-labelledby="h-ad">
+    <h2 id="h-ad"><span class="step">1</span>الإعلان</h2>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabFields" aria-selected="true">من الحقول</button>
+      <button role="tab" id="tabFree" aria-selected="false">نص حر</button>
+    </div>
+    <div id="modeFields" class="grid">
+      <div><label for="fTitle">المسمى الوظيفي</label><input type="text" id="fTitle"></div>
+      <div><label for="fCompany">اسم الشركة (اختياري)</label><input type="text" id="fCompany"></div>
+      <div><label for="fLocation">مكان العمل</label><input type="text" id="fLocation"></div>
+      <div><label for="fSalary">المرتب (اختياري)</label><input type="text" id="fSalary"></div>
+      <div class="full"><label for="fReq">الشروط (كل شرط في سطر)</label><textarea id="fReq"></textarea></div>
+      <div class="full"><label for="fBen">المميزات (كل ميزة في سطر، اختياري)</label><textarea id="fBen"></textarea></div>
+      <div class="full"><label for="fApply">طريقة التقديم (رقم واتساب، إيميل، أو لينك)</label><input type="text" id="fApply"></div>
+      <div class="full"><label for="fTags">هاشتاجات (اختياري)</label><input type="text" id="fTags"></div>
+    </div>
+    <div id="modeFree" hidden>
+      <label for="fFree">اكتب الإعلان بنفسك</label>
+      <textarea id="fFree" style="min-height:200px"></textarea>
+      <p class="hint">عشان النص يتغير من جروب للتاني، حط الكلمات البديلة بين أقواس وافصلها بـ |. مثال: {مطلوب|محتاجين|نبحث عن} محاسب. كل جروب هياخد اختيار مختلف.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-groups">
+    <h2 id="h-groups"><span class="step">2</span>الجروبات</h2>
+    <div>
+      <label for="fGroups">كل جروب في سطر: اسم الجروب | لينك الجروب</label>
+      <textarea id="fGroups" style="min-height:150px;direction:rtl"></textarea>
+      <p class="hint">ممكن تحط اللينك لوحده من غير اسم. القائمة بتتحفظ في المتصفح ده، فاحتفظ بنسخة منها في ملف عندك.</p>
+    </div>
+    <div class="grid">
+      <div><label for="fBatch">عدد الجروبات في الدفعة</label><input type="number" id="fBatch" min="1" max="30"></div>
+      <div><label for="fBreak">استراحة بين الدفعات (دقيقة)</label><input type="number" id="fBreak" min="0" max="240"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-queue">
+    <div class="row" style="justify-content:space-between">
+      <h2 id="h-queue"><span class="step">3</span>انشر</h2>
+      <button class="btn small" id="resetDay">ابدأ من الأول النهارده</button>
+    </div>
+    <p class="hint">دوس "انسخ وافتح": البوست بيتنسخ والجروب بيفتح في تاب جديد. الزق (Ctrl+V) وانشر، وارجع هنا. الجروب بيتعلّم عليه لوحده.</p>
+    <ol class="queue" id="queue"></ol>
+  </section>
+
+  <section aria-labelledby="h-li">
+    <h2 id="h-li">نسخة رسمية لـ LinkedIn و Wuzzuf</h2>
+    <pre class="post" id="formal"></pre>
+    <div class="row"><button class="btn primary" id="copyFormal">انسخ النسخة الرسمية</button></div>
+  </section>
+
+  <section aria-labelledby="h-tips">
+    <h2 id="h-tips">عشان حسابك ميتقفلش</h2>
+    <ul class="tips">
+      <li>متنشرش أكتر من 10 جروبات ورا بعض، وخد استراحة 20 دقيقة على الأقل بين كل دفعة.</li>
+      <li>متنشرش في نفس الجروب أكتر من مرة في الأسبوع. الأداة بتنبهك لو نشرت فيه قريب.</li>
+      <li>اقرا قوانين الجروب، فيه جروبات بتسمح بالوظائف في يوم معين بس.</li>
+      <li>لو فيسبوك قالك "You can't post right now" وقّف النشر يوم كامل.</li>
+    </ul>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem('jp_'+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem('jp_'+k,JSON.stringify(v))}catch(e){}}};
+
+const EXAMPLE={
+  mode:'fields',
+  fTitle:'محاسب عام',
+  fCompany:'',
+  fLocation:'القاهرة الجديدة - التجمع الخامس',
+  fSalary:'',
+  fReq:'بكالوريوس تجارة شعبة محاسبة\nخبرة من سنة لـ 3 سنين\nإجادة Excel\nيفضل خبرة على برنامج محاسبي',
+  fBen:'تأمينات اجتماعية وطبية\nمواصلات\nإجازة يومين في الأسبوع',
+  fApply:'واتساب 01000000000',
+  fTags:'#وظائف #وظائف_خالية #القاهرة_الجديدة',
+  fFree:'{مطلوب|محتاجين|نبحث عن} محاسب عام لشركة في القاهرة الجديدة\n\n{الشروط|المطلوب}:\n- بكالوريوس تجارة\n- خبرة من سنة لـ 3 سنين\n\n{للتقديم|ابعت الـ CV} واتساب 01000000000',
+  fGroups:'مثال: وظائف القاهرة الجديدة | https://www.facebook.com/groups/example1\nمثال: وظائف محاسبين مصر | https://www.facebook.com/groups/example2\nمثال: شغل التجمع الخامس | https://www.facebook.com/groups/example3',
+  fBatch:10, fBreak:20
+};
+const FIELDS=['fTitle','fCompany','fLocation','fSalary','fReq','fBen','fApply','fTags','fFree','fGroups','fBatch','fBreak'];
+const saved=store.get('form',null)||EXAMPLE;
+FIELDS.forEach(k=>{ $(k).value = saved[k]!=null?saved[k]:EXAMPLE[k]; });
+let mode=saved.mode||'fields';
+let posts=store.get('posts',{}); // key -> timestamp of last post
+
+function today(){const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()}
+function isToday(ts){if(!ts)return false;const d=new Date(ts);return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()===today()}
+function daysAgo(ts){return Math.floor((Date.now()-ts)/86400000)}
+
+// seeded rng
+function rng(seed){let s=seed>>>0||1;return()=>{s^=s<<13;s>>>=0;s^=s>>17;s^=s<<5;s>>>=0;return s/4294967296}}
+function hash(str){let h=2166136261;for(const c of str){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+const pick=(r,a)=>a[Math.floor(r()*a.length)];
+const lines=t=>t.split('\n').map(s=>s.trim()).filter(Boolean);
+
+function build(i,key){
+  const r=rng(hash(key+'|'+i+'|'+today()));
+  if(mode==='free'){
+    return $('fFree').value.replace(/\{([^{}]*\|[^{}]*)\}/g,(m,g)=>pick(r,g.split('|')));
+  }
+  const t=$('fTitle').value.trim()||'الوظيفة', co=$('fCompany').value.trim(), loc=$('fLocation').value.trim(),
+        sal=$('fSalary').value.trim(), ap=$('fApply').value.trim(), tags=$('fTags').value.trim();
+  const req=lines($('fReq').value), ben=lines($('fBen').value);
+  const who=co?co:pick(r,['شركة كبرى','شركتنا','شركة رائدة']);
+  const open=pick(r,[
+    `🔴 مطلوب فوراً ${t}`,
+    `📢 فرصة عمل: ${t}`,
+    `✨ وظيفة خالية - ${t}`,
+    `محتاجين ${t} ينضم لفريق ${who}`,
+    `💼 ${who} بتعلن عن احتياجها لـ ${t}`,
+    `مطلوب ${t} للعمل في ${who}`
+  ]);
+  const b=pick(r,['✔️ ','▪️ ','🔹 ','- ','• ']);
+  const parts=[open];
+  if(loc) parts.push(pick(r,[`📍 مكان العمل: ${loc}`,`📍 الشغل في ${loc}`,`📌 المكان: ${loc}`]));
+  const reqBlock=req.length?pick(r,['الشروط:','المطلوب:','المتطلبات:'])+'\n'+req.map(x=>b+x).join('\n'):'';
+  const benBlock=ben.length?pick(r,['المميزات:','بنقدم:','إيه اللي هتاخده:'])+'\n'+ben.map(x=>b+x).join('\n'):'';
+  if(r()<.3){ if(benBlock)parts.push(benBlock); if(reqBlock)parts.push(reqBlock);} else { if(reqBlock)parts.push(reqBlock); if(benBlock)parts.push(benBlock);}
+  if(sal) parts.push(pick(r,[`💰 المرتب: ${sal}`,`💰 الراتب: ${sal}`]));
+  if(ap) parts.push(pick(r,[`📩 للتقديم ابعت الـ CV على: ${ap}`,`للتقديم: ${ap}`,`ابعت السي ڤي على ${ap} واكتب "${t}" في الرسالة`]));
+  const close=pick(r,['شير للي محتاجها، ممكن تكون سبب في رزق حد 🙏','اعمل منشن لحد مناسب 👇','بالتوفيق للجميع 🤍','']);
+  if(close) parts.push(close);
+  if(tags) parts.push(tags);
+  return parts.join('\n\n');
+}
+function formal(){
+  if(mode==='free') return $('fFree').value.replace(/\{([^{}|]*)\|[^{}]*\}/g,'$1');
+  const t=$('fTitle').value.trim(), co=$('fCompany').value.trim(), loc=$('fLocation').value.trim(), sal=$('fSalary').value.trim(), ap=$('fApply').value.trim();
+  const req=lines($('fReq').value), ben=lines($('fBen').value);
+  let s=`${co?co+' is hiring':'We are hiring'}: ${t}\nنعلن عن حاجتنا إلى ${t}${co?' للعمل لدى '+co:''}`;
+  if(loc) s+=`\n\nمكان العمل: ${loc}`;
+  if(req.length) s+=`\n\nالمتطلبات:\n`+req.map(x=>'• '+x).join('\n');
+  if(ben.length) s+=`\n\nالمزايا:\n`+ben.map(x=>'• '+x).join('\n');
+  if(sal) s+=`\n\nالراتب: ${sal}`;
+  if(ap) s+=`\n\nللتقديم: ${ap}`;
+  return s+'\n\n#hiring #وظائف';
+}
+
+function groups(){
+  return lines($('fGroups').value).map((l,i)=>{
+    let name=l,link='';
+    const m=l.match(/https?:\/\/\S+/);
+    if(m){link=m[0];name=l.replace(m[0],'').replace(/\|/g,'').trim()||link.replace(/^https?:\/\/(www\.)?facebook\.com\/groups\//,'جروب: ').replace(/\/$/,'');}
+    return {name,link,key:link||name};
+  });
+}
+
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('show'),2200)}
+function copyText(text){
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();return ok};
+  try{ if(navigator.clipboard&&navigator.clipboard.writeText){ return navigator.clipboard.writeText(text).then(()=>true,()=>fallback()); } }catch(e){}
+  return Promise.resolve(fallback());
+}
+
+function batchState(list){
+  const size=Math.max(1,parseInt($('fBatch').value)||10), brk=Math.max(0,parseInt($('fBreak').value)||0);
+  const todayTimes=list.map(g=>posts[g.key]).filter(isToday).sort((a,b)=>a-b);
+  const done=todayTimes.length;
+  const batch=Math.floor(done/size)+1;
+  let waitUntil=0;
+  if(done>0 && done%size===0 && brk>0){ waitUntil=todayTimes[done-1]+brk*60000; }
+  return {size,done,batch,waitUntil};
+}
+
+function render(){
+  const list=groups(), bs=batchState(list);
+  $('stDone').textContent=bs.done; $('stLeft').textContent=Math.max(0,list.length-bs.done); $('stBatch').textContent=bs.batch;
+  const q=$('queue'); q.innerHTML='';
+  let pendingIdx=0;
+  list.forEach((g,i)=>{
+    const ts=posts[g.key], doneToday=isToday(ts);
+    const li=document.createElement('li'); li.className='item'+(doneToday?' done':'');
+    if(!doneToday){ if(pendingIdx>0 && pendingIdx% bs.size===0){ /* separator before next batch */ }
+    }
+    const head=document.createElement('div'); head.className='item-head';
+    head.innerHTML=`<span class="num">${i+1}</span><span class="gname"></span>`;
+    head.querySelector('.gname').textContent=g.name;
+    if(doneToday){ head.insertAdjacentHTML('beforeend',`<span class="chip ok">اتنشر ${new Date(ts).toLocaleTimeString('ar-EG',{hour:'numeric',minute:'2-digit'})}</span>`); }
+    else if(ts && daysAgo(ts)<7){ head.insertAdjacentHTML('beforeend',`<span class="chip warn">نشرت هنا من ${daysAgo(ts)||'أقل من'} يوم</span>`); }
+    else if(!g.link){ head.insertAdjacentHTML('beforeend',`<span class="chip">مفيش لينك</span>`); }
+    const text=build(i,g.key);
+    const a=document.createElement(g.link?'a':'button');
+    a.className='btn '+(doneToday?'small':'primary small');
+    a.textContent=doneToday?'انسخ تاني':'انسخ وافتح';
+    if(g.link){a.href=g.link;a.target='_blank';a.rel='noopener';}
+    a.addEventListener('click',()=>{
+      copyText(text).then(ok=>toast(ok?'البوست اتنسخ. الزقه في الجروب':'مقدرتش أنسخ. افتح "شوف البوست" وانسخه يدوي'));
+      if(!doneToday){posts[g.key]=Date.now();store.set('posts',posts);setTimeout(render,50);}
+    });
+    head.appendChild(a);
+    if(doneToday){const u=document.createElement('button');u.className='btn small';u.textContent='إلغاء';u.addEventListener('click',()=>{delete posts[g.key];store.set('posts',posts);render()});head.appendChild(u);}
+    li.appendChild(head);
+    const det=document.createElement('details');det.innerHTML='<summary>شوف البوست</summary>';
+    const pre=document.createElement('pre');pre.className='post';pre.textContent=text;det.appendChild(pre);li.appendChild(det);
+    q.appendChild(li);
+  });
+  if(!list.length) q.innerHTML='<li class="hint">حط لينكات الجروبات في الخطوة 2 وهتظهر هنا.</li>';
+  $('formal').textContent=formal();
+  updateBanner();
+}
+
+function updateBanner(){
+  const list=groups(), bs=batchState(list), b=$('banner');
+  if(list.length && bs.done>=list.length){b.className='banner go';b.textContent='خلصت كل الجروبات النهارده ✔';return;}
+  const left=bs.waitUntil-Date.now();
+  if(left>0){
+    const m=Math.floor(left/60000), s=Math.floor(left%60000/1000);
+    b.className='banner wait';
+    b.textContent=`خلصت الدفعة ${bs.batch-1}. استنى ${m}:${String(s).padStart(2,'0')} قبل الدفعة الجاية عشان فيسبوك ميعتبرهاش سبام.`;
+  } else {
+    const inBatch=bs.done%bs.size;
+    b.className='banner go';
+    b.textContent=bs.done===0?`جاهز. ابدأ أول دفعة (${bs.size} جروبات).`:`الدفعة ${bs.batch}: نشرت ${inBatch} من ${bs.size}.`;
+  }
+}
+setInterval(updateBanner,1000);
+
+function save(){const o={mode};FIELDS.forEach(k=>o[k]=$(k).value);store.set('form',o)}
+let tmr;FIELDS.forEach(k=>$(k).addEventListener('input',()=>{save();clearTimeout(tmr);tmr=setTimeout(render,250)}));
+function setMode(m){mode=m;$('tabFields').setAttribute('aria-selected',m==='fields');$('tabFree').setAttribute('aria-selected',m==='free');$('modeFields').hidden=m!=='fields';$('modeFree').hidden=m!=='free';save();render()}
+$('tabFields').addEventListener('click',()=>setMode('fields'));
+$('tabFree').addEventListener('click',()=>setMode('free'));
+$('copyFormal').addEventListener('click',()=>copyText($('formal').textContent).then(ok=>toast(ok?'النسخة الرسمية اتنسخت':'مقدرتش أنسخ، حددها وانسخها يدوي')));
+let armed=false;
+$('resetDay').addEventListener('click',e=>{
+  if(!armed){armed=true;e.target.textContent='متأكد؟ دوس تاني';setTimeout(()=>{armed=false;e.target.textContent='ابدأ من الأول النهارده'},3000);return;}
+  armed=false;e.target.textContent='ابدأ من الأول النهارده';
+  Object.keys(posts).forEach(k=>{if(isToday(posts[k]))delete posts[k]});store.set('posts',posts);render();toast('اتمسحت علامات النهارده');
+});
+setMode(mode);
+})();
+</script>
+</body>
+</html>
