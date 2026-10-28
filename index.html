@@ -131,6 +131,16 @@ pre.post{white-space:pre-wrap;font-family:var(--body);background:var(--surface);
     <ol class="queue" id="queue"></ol>
   </section>
 
+  <section aria-labelledby="h-wa">
+    <h2 id="h-wa">نسخة الواتساب</h2>
+    <p class="hint">نفس الإعلان بشكل الواتساب: العناوين بالخط العريض وكل شرط في سطر. دوس "ابعت على الواتساب"، اختار لحد 5 جروبات وابعت، وكرر لحد ما تخلص الجروبات. أو انسخه وانزله في قناة الواتساب بتاعتك.</p>
+    <pre class="post" id="waText"></pre>
+    <div class="row">
+      <a class="btn primary" id="waLink" href="https://wa.me/" target="_blank" rel="noopener">ابعت على الواتساب</a>
+      <button class="btn" id="copyWa">انسخ نسخة الواتساب</button>
+    </div>
+  </section>
+
   <section aria-labelledby="h-li">
     <h2 id="h-li">نسخة رسمية لـ LinkedIn و Wuzzuf</h2>
     <pre class="post" id="formal"></pre>
@@ -219,6 +229,18 @@ function build(i,key){
   if(tags) parts.push(tags);
   return parts.join('\n\n');
 }
+function waText(){
+  if(mode==='free') return $('fFree').value.replace(/\{([^{}|]*)\|[^{}]*\}/g,'$1').trim();
+  const t=$('fTitle').value.trim()||'الوظيفة', co=$('fCompany').value.trim(), loc=$('fLocation').value.trim(), sal=$('fSalary').value.trim(), ap=$('fApply').value.trim();
+  const req=lines($('fReq').value), ben=lines($('fBen').value);
+  let s=`🔴 *مطلوب ${t}*`+(co?`\n🏢 ${co}`:'');
+  if(loc) s+=`\n📍 *المكان:* ${loc}`;
+  if(req.length) s+=`\n\n*الشروط:*\n`+req.map(x=>'• '+x).join('\n');
+  if(ben.length) s+=`\n\n*المميزات:*\n`+ben.map(x=>'• '+x).join('\n');
+  if(sal) s+=`\n\n💰 *المرتب:* ${sal}`;
+  if(ap) s+=`\n\n📩 *للتقديم:* ${ap}`;
+  return s+'\n\nشير للي محتاجها 🙏';
+}
 function formal(){
   if(mode==='free') return $('fFree').value.replace(/\{([^{}|]*)\|[^{}]*\}/g,'$1');
   const t=$('fTitle').value.trim(), co=$('fCompany').value.trim(), loc=$('fLocation').value.trim(), sal=$('fSalary').value.trim(), ap=$('fApply').value.trim();
@@ -292,6 +314,7 @@ function render(){
   });
   if(!list.length) q.innerHTML='<li class="hint">حط لينكات الجروبات في الخطوة 2 وهتظهر هنا.</li>';
   $('formal').textContent=formal();
+  const w=waText(); $('waText').textContent=w; $('waLink').href='https://wa.me/?text='+encodeURIComponent(w);
   updateBanner();
 }
 
@@ -316,6 +339,7 @@ let tmr;FIELDS.forEach(k=>$(k).addEventListener('input',()=>{save();clearTimeout
 function setMode(m){mode=m;$('tabFields').setAttribute('aria-selected',m==='fields');$('tabFree').setAttribute('aria-selected',m==='free');$('modeFields').hidden=m!=='fields';$('modeFree').hidden=m!=='free';save();render()}
 $('tabFields').addEventListener('click',()=>setMode('fields'));
 $('tabFree').addEventListener('click',()=>setMode('free'));
+$('copyWa').addEventListener('click',()=>copyText($('waText').textContent).then(ok=>toast(ok?'نسخة الواتساب اتنسخت':'مقدرتش أنسخ، حددها وانسخها يدوي')));
 $('copyFormal').addEventListener('click',()=>copyText($('formal').textContent).then(ok=>toast(ok?'النسخة الرسمية اتنسخت':'مقدرتش أنسخ، حددها وانسخها يدوي')));
 let armed=false;
 $('resetDay').addEventListener('click',e=>{
